@@ -1,4 +1,4 @@
-import { Note } from '../models/note';
+import { Note }  from '../models/note.js';
 import createHttpError from 'http-errors';
 
 export const getAllNotes = async (req, res) => {
@@ -72,4 +72,4 @@ export const updateNote = async (req, res, next) => {
 
 const get_404_ById = (noteId) => {
 	return createHttpError(404, `Note not found by id ${noteId}`)
-} 
+}
