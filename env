@@ -1,2 +1,2 @@
 PORT=3000
-MONGODB_URL=mongodb+srv://iryna0425_db_user:lN2eUPifC5fimSqC@cluster0.i6kor3l.mongodb.net/notes?retryWrites=true&w=majority&appName=Cluster0
+MONGO_URL=mongodb+srv://iryna0425_db_user:lN2eUPifC5fimSqC@cluster0.i6kor3l.mongodb.net/notes?retryWrites=true&w=majority&appName=Cluster0
