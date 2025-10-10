@@ -11,10 +11,10 @@ export const getAllNotesSchema = {
   }),
   };
 
-const objectIdValidator = Joi.string().custom((value, helpers) => {
-  const isValidId = isValidObjectId(value);
+const objectIdValidator = (value, helpers) => {
+   const isValidId = isValidObjectId(value);
   return !isValidId ? helpers.message("Invalid id format!") : value;
-});
+};
 
 export const noteIdSchema = {
   [Segments.PARAMS]: Joi.object({
