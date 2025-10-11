@@ -4,9 +4,9 @@ import { TAGS } from '../constants/tags.js';
 
 export const getAllNotesSchema = {
   [Segments.QUERY]: Joi.object({
-    page: Joi.number().min(1).max(30).default(1).required(),
-    perPage: Joi.number().min(5).max(20).default(10).required(),
-    tag: Joi.string().valid(...TAGS).required(),
+    page: Joi.number().min(1).max(30).default(1),
+    perPage: Joi.number().min(5).max(20).default(10),
+    tag: Joi.string().valid(...TAGS),
     search: Joi.string().allow(''),
   }),
   };
@@ -26,7 +26,7 @@ export const createNoteSchema = {
    [Segments.BODY]: Joi.object({
     title: Joi.string().min(1).required(),
     content: Joi.string().allow(''),
-    tag: Joi.string().valid(...TAGS).required(),
+    tag: Joi.string().valid(...TAGS),
       }),
 }
 
@@ -35,8 +35,12 @@ export const updateNoteSchema = {
     noteId: Joi.string().custom(objectIdValidator).required(),
   }),
  [Segments.BODY]: Joi.object({
-    title: Joi.string().min(1).required(),
+    title: Joi.string().min(1),
     content: Joi.string().allow(''),
-    tag: Joi.string().valid(...TAGS).required(),
-      }),
+    tag: Joi.string().valid(...TAGS),
+  })
+    .or('title', 'content', 'tag')
+    .messages({
+      'object.missing': 'At least one of "title", "content", or "tag" must be provided',
+    }),
 };
