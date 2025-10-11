@@ -1,31 +1,41 @@
 import { Note } from '../models/note.js';
 import createHttpError from 'http-errors';
 
-export const getAllNotes = async (req, res) => {
+export const getAllNotes = async (req, res, next) => {
+  try {
     const { page = 1, perPage = 10, search, tag } = req.query;
+    const skip = (page - 1) * perPage;
 
-  const skip = (page - 1) * perPage;
+    const notesQuery = Note.find();
 
+    if (search) {
+      notesQuery.where({
+        $text: { $search: search },
+      });
+    }
 
-  const notesQuery = Note.find();
-  if (search) {
-    notesQuery.where({
-	  $text: { $search: search }
-	});
+    if (tag) {
+      notesQuery.where('tag').equals(tag);
+    }
+
+    // Виконуємо запити паралельно
+    const [totalItems, notes] = await Promise.all([
+      notesQuery.clone().countDocuments(),
+      notesQuery.skip(skip).limit(perPage),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / perPage);
+
+    res.status(200).json({
+      page: Number(page),
+      perPage: Number(perPage),
+      totalItems,
+      totalPages,
+      notes,
+    });
+  } catch (error) {
+    next(error);
   }
-
-  if (tag) {
-		notesQuery.where("tag").equals(tag);
-	}
-  // Виконуємо одразу два запити паралельно
-  const [totalItems, notes] = await Promise.all([
-    notesQuery.clone().countDocuments(),
-    notesQuery.skip(skip).limit(perPage),
-  ]);
-
-  // Обчислюємо загальну кількість «сторінок»
-  const totalPages = Math.ceil(totalItems / perPage);
-  res.status(200).json(page, perPage, totalItems, totalPages, notes);
 };
 
 export const getNoteById = async (req, res, next) => {
@@ -35,7 +45,7 @@ export const getNoteById = async (req, res, next) => {
     const note = await Note.findById(noteId);
 
     if (!note) {
-      next(get_404_ById(noteId));
+      next(getNotFoundById(noteId));
       return;
     }
 
@@ -45,21 +55,23 @@ export const getNoteById = async (req, res, next) => {
   }
 };
 
-export const createNote = async (req, res) => {
-  const newNote = await Note.create(req.body);
-  res.status(201).json(newNote);
+export const createNote = async (req, res, next) => {
+  try {
+    const newNote = await Note.create(req.body);
+    res.status(201).json(newNote);
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const deleteNote = async (req, res, next) => {
   const { noteId } = req.params;
 
   try {
-    const deletedNote = await Note.findOneAndDelete({
-      _id: noteId,
-    });
+    const deletedNote = await Note.findOneAndDelete({ _id: noteId });
 
     if (!deletedNote) {
-      next(get_404_ById(noteId));
+      next(getNotFoundById(noteId));
       return;
     }
 
@@ -78,7 +90,7 @@ export const updateNote = async (req, res, next) => {
     });
 
     if (!updatedNote) {
-      next(get_404_ById(noteId));
+      next(getNotFoundById(noteId));
       return;
     }
 
@@ -88,6 +100,7 @@ export const updateNote = async (req, res, next) => {
   }
 };
 
-const get_404_ById = (noteId) => {
+// Допоміжна функція для 404
+const getNotFoundById = (noteId) => {
   return createHttpError(404, `Note not found by id ${noteId}`);
 };
